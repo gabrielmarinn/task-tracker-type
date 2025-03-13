@@ -4,6 +4,8 @@ import {
   listTask,
   updateTask,
   removeTask,
+  exportTasks,
+  searchTask,
 } from './controllers/task-controller.js'
 
 const menu = async (): Promise<void> => {
@@ -11,24 +13,54 @@ const menu = async (): Promise<void> => {
     {
       type: 'list',
       name: 'action',
-      message: 'What do you to do?',
-      choices: ['Add task', 'Task list', 'Update task', 'Remove task', 'Exit'],
+      message: 'What do you want to do?',
+      choices: [
+        'Add task',
+        'List task',
+        'Update task',
+        'Remove task',
+        'Search Task',
+        'Export tasks',
+        'Exit',
+      ],
     },
   ])
 
   if (action === 'Add task') {
-    const { title } = await inquirer.prompt([
+    const { title, priority, dueDate } = await inquirer.prompt([
       {
         type: 'input',
         name: 'title',
         message: 'description',
       },
+
+      {
+        type: 'list',
+        name: 'priority',
+        message: 'Task priority',
+        choices: ['low', 'medium', 'high'],
+      },
+
+      {
+        type: 'input',
+        name: 'dueDate',
+        message: 'Due date (YYYY-MM-DD, optional): ',
+        default: '',
+      },
     ])
-    await addTask(title)
+    await addTask(title, priority, dueDate || undefined)
   }
 
-  if (action === 'Task list') {
-    await listTask()
+  if (action === 'List task') {
+    const { filter } = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'filter',
+        message: 'Filter tasks by Status',
+        choices: ['all', 'pending', 'in progress', 'completed'],
+      },
+    ])
+    await listTask(filter === 'all' ? undefined : filter)
   }
 
   if (action === 'Update task') {
@@ -54,10 +86,25 @@ const menu = async (): Promise<void> => {
       {
         type: 'input',
         name: 'id',
-        message: 'Task id to remove',
+        message: 'Task ID to remove',
       },
     ])
     await removeTask(id)
+  }
+
+  if (action === 'Search task') {
+    const { title } = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'title',
+        message: 'Enter task title to search: ',
+      },
+    ])
+    await searchTask(title)
+  }
+
+  if (action === 'Export task') {
+    await exportTasks()
   }
 
   if (action !== 'Exit') {
